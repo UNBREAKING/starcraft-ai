@@ -390,6 +390,15 @@ public class TestBot1 extends DefaultBWListener {
     	    		}  	    		
     	    	}
     			
+    			public double distance(){
+    			double res=0;
+    			Unit nexus=ListOfNexuses.Nexuses.get(0);
+    			res=Math.abs(
+						Math.pow(warrior.getTilePosition().getX()-nexus.getTilePosition().getX(),2)+ Math.pow(warrior.getTilePosition().getY()-nexus.getTilePosition().getY(),2)
+						);
+    			
+    			return res;
+    			}
     			
     			public void changeState(boolean state){
     				inAttack=state;
@@ -397,8 +406,7 @@ public class TestBot1 extends DefaultBWListener {
     			
     			public void attack(){
     				inAttackBuilding=false;
-    				
-    				if(warrior.isUnderAttack()){
+    				if(warrior.isUnderAttack() && distance()>20){
     					returnToBase();
     				}else{
 

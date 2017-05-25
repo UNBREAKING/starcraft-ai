@@ -352,8 +352,80 @@ public class TestBot1 extends DefaultBWListener {
     	
     }
     
+    public class Warrior{
+    	Unit warrior=null;
+    	boolean inAttack=false;
+    	boolean inAttackBuilding=false;
+    	Unit Enemy=null;
+    	EnemyBuilding Building=null;
+    			Warrior(Unit unit){
+    				warrior=unit;
+    			}
+    			
+    			public void returnToBase(){    		
+    					warrior.move(self.getStartLocation().toPosition());
+    					inAttack=false;
+    					inAttackBuilding=false;
+    						
+    	    	}
+    			
+    			public void attackEnemyBuildings(){
+    	    		inAttack=false;
+    				if(EnemyBuildings.indexOf(Building)==-1){
+    					inAttackBuilding=false;
+    					
+    				}
+    	    		
+    	    		for(int i=0;i<EnemyBuildings.size();i++){
+    	    			Building=EnemyBuildings.get(i);
+    	    			if(inAttackBuilding==false){
+    	    				warrior.attack(Building.returnPosition());
+    	    			inAttackBuilding=true;
+    	    			}
+    	    			if(EnemyBuildings.contains(Building)){
+    	    				break;
+    	    			}else{
+    	    				inAttackBuilding=false;
+    	    			}
+    	    		}  	    		
+    	    	}
+    			
+    			
+    			public void changeState(boolean state){
+    				inAttack=state;
+    			}
+    			
+    			public void attack(){
+    				inAttackBuilding=false;
+    				
+    				if(warrior.isUnderAttack()){
+    					returnToBase();
+    				}else{
+
+    	    		
+    	    		if(inAttack==false){
+    	    	
+    	    			Enemy=EnemyArmy.get(0);
+    	    			for(int j=1;j<EnemyArmy.size();j++){
+    	    				if(Math.abs(
+    	    						Math.pow(warrior.getTilePosition().getX()-Enemy.getTilePosition().getX(),2)+ Math.pow(warrior.getTilePosition().getY()-Enemy.getTilePosition().getY(),2)
+    	    						)>Math.abs(
+    	    	    						Math.pow(warrior.getTilePosition().getX()-EnemyArmy.get(j).getTilePosition().getX(),2)+ Math.pow(warrior.getTilePosition().getY()-EnemyArmy.get(j).getTilePosition().getY(),2)
+    	    	    						)
+    	    						){
+    	    					Enemy=EnemyArmy.get(j);
+    	    			}
+    	    			
+    	    		}
+    	    			warrior.attack(Enemy);
+    	    			inAttack=true;	
+    	    				
+    	    	}	}
+    			}
+    }
+    
     public class Army{
-    	public List<Unit> army= null;
+    	public List<Warrior> army= null;
     	boolean inAttack=false;
     	boolean inAttackBuilding=false;
     	int armysize=0;
@@ -365,39 +437,21 @@ public class TestBot1 extends DefaultBWListener {
 		double HPofEnemyArmy=0;
 		
     	Army(){
-    		army=new ArrayList<Unit>();
+    		army=new ArrayList<Warrior>();
     		army.clear();
     		}
     	public void add(Unit unit){
-    		army.add(unit);
+    		army.add(new Warrior(unit));
     		inAttack=false;
     	}
-    	public List<Unit> returnList(){
+    	public List<Warrior> returnList(){
     		return army;
     	}
     	
-    	public void delete(Unit unit){
-    		army.remove(unit);
-    	}
-    	
-    	public void attackEnemyBase(){
-    		
-    		if (army.size()>=16){
-    			for (BaseLocation b : BWTA.getBaseLocations()) {
-    				
-    				if (b.isStartLocation() && !self.getStartLocation().equals(b.getTilePosition())) {
-    					for (int j=0;j<army.size();j++){
-    				 army.get(j).attack(b.getPosition());
-    				 }
-    				}
-    			}
-    		}
-    		
-    	}
     	
     	public void returnToBase(){
     		for (int j=0;j<army.size();j++){
-				army.get(j).move(self.getStartLocation().toPosition());
+				army.get(j).returnToBase();
 				
     		}
     	}
@@ -410,7 +464,7 @@ public class TestBot1 extends DefaultBWListener {
     		
     		HPofArmy=0;
     		for(int i=0;i<army.size();i++){
-    			HPofArmy+=army.get(i).getHitPoints();
+    			HPofArmy+=army.get(i).warrior.getHitPoints();
     			
     		}
     		
@@ -445,85 +499,38 @@ public class TestBot1 extends DefaultBWListener {
     	}
     	
 public void attackEnemyBuildings(){
-    		
-			if(armysize!=army.size()){
-				inAttackBuilding=false;
-				armysize=army.size();
-			}
-    		
-    		for(int i=0;i<EnemyBuildings.size();i++){
-    			EnemyBuilding Enemy=EnemyBuildings.get(i);
-    			if(inAttackBuilding==false){
-    			for (int j=0;j<army.size();j++){
-    				army.get(j).attack(Enemy.returnPosition());
     				
-    			}
-    			inAttackBuilding=true;
-    			}
-    			if(EnemyBuildings.contains(Enemy)){
-    				break;
-    			}else{
-    				inAttackBuilding=false;
-    			}
-    		}
-    		
-    		
-		
-		
-    		
-    	}
-    	
-    	public void attackEnemyDefBuildings(){
-    		
-    		for(int i=0;i<EnemyDefenderBuildings.size();i++){
-    			EnemyBuilding Enemy=EnemyDefenderBuildings.get(i);
-    			if(inAttackDefBuilding==false){
     			for (int j=0;j<army.size();j++){
-    				army.get(j).attack(Enemy.returnPosition());
-    				
+    				army.get(j).attackEnemyBuildings();  				
     			}
-    			inAttackDefBuilding=true;
-    			}
-    			if(EnemyDefenderBuildings.contains(Enemy)){
-    				break;
-    			}else{
-    				inAttackDefBuilding=false;
-    			}
-    		}
-    		
     	}
+  
     	
     	public void attack(){
     		
-    		
-    		
     		if(EnemyArmy.size()==visibleEnemies() || armysize!=army.size()){
-    			inAttack=false;
+    			for(int i=0;i<army.size();i++){
+    				army.get(i).changeState(false);
+    			}
     			armysize=army.size();
     		}
     		
-    		if(inAttack==false)
     		for (int i=0;i<army.size();i++){
-    			Unit MyUnit=army.get(i);
-    			Unit Enemy=EnemyArmy.get(0);
-    			for(int j=1;j<EnemyArmy.size();j++){
-    				if(Math.abs(
-    						Math.pow(MyUnit.getTilePosition().getX()-Enemy.getTilePosition().getX(),2)+ Math.pow(MyUnit.getTilePosition().getY()-Enemy.getTilePosition().getY(),2)
-    						)>Math.abs(
-    	    						Math.pow(MyUnit.getTilePosition().getX()-EnemyArmy.get(j).getTilePosition().getX(),2)+ Math.pow(MyUnit.getTilePosition().getY()-EnemyArmy.get(j).getTilePosition().getY(),2)
-    	    						)
-    						){
-    					Enemy=EnemyArmy.get(j);
+    			army.get(i).attack();
+    		}
+
+    	}
+    	
+    	public boolean deleteUnit(Unit unit){
+    		boolean res=false;
+    		for(int i=0;i<army.size();i++){
+    			if(army.get(i).warrior.equals(unit)){
+    				army.remove(i);
+    				res=true;
+    				break;
     			}
-    			
     		}
-    			MyUnit.attack(Enemy);
-    			inAttack=true;	
-    		}
-    		
-    		
-    		
-    		
+    		return res;
     	}
     	
     	
@@ -661,8 +668,7 @@ public void attackEnemyBuildings(){
     }
     
     public void onUnitDestroy(Unit unit){
-    	if(army.returnList().indexOf(unit)!=-1){
-    		army.delete(unit);
+    	if(army.deleteUnit(unit)){
     		double unitDamage=0;double unitWeaponCooldown=0;
         	if(unit.getType().isFlyer()){
     			unitDamage=unit.getType().airWeapon().damageAmount();
